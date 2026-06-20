@@ -1,0 +1,21 @@
+{
+  "name": "@voidshake/assembler",
+  "module": "src/main.ts",
+  "type": "module",
+  "version": "0.0.0",
+  "scripts": {
+    "cli": "bun run src/main.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5",
+    "@pssbletrngle/data-modifier": "^0.3.5",
+    "@pssbletrngle/pack-resolver": "^1.4.1",
+    "@pssbletrngle/resource-merger": "^1.2.4"
+  },
+  "dependencies": {
+    "arg": "^5.0.2"
+  }
+}
