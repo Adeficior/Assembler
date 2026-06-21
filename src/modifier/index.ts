@@ -1,4 +1,8 @@
-import { type Logger, PackLoader } from "@pssbletrngle/data-modifier";
+import {
+  createLogger,
+  type Logger,
+  PackLoader,
+} from "@pssbletrngle/data-modifier";
 import {
   type Acceptor,
   createMergedResolver,
@@ -99,17 +103,34 @@ function createAcceptor(logger: Logger, output: string) {
   return { accept, finalize, cache };
 }
 
-export default async function modifyResources(
+const defaultOptions: LoadOptions = {
+  logger: createLogger(),
+  failFast: true,
+};
+
+export default async function generateResources(
   modulesDir: string,
-  options?: Partial<LoadOptions>,
+  cacheDir: string,
+  to: string,
+  options: Partial<LoadOptions> = {},
 ) {
+  const resolvedOptions: LoadOptions = {
+    ...defaultOptions,
+    ...options,
+  };
+
+  const { logger } = resolvedOptions;
+
   const resolver = createMergedResolver({
-    from: ["../install/mods", "reference"],
+    from: [
+      resolve(cacheDir, "install", "mods"),
+      resolve(cacheDir, "reference"),
+    ],
     include: ["data/**/*.json", "assets/**/*.json"],
     silent: true,
   });
 
-  const output = createAcceptor(logger, "../resources/modified");
+  const output = createAcceptor(logger, to);
 
   // TODO pass options in
   const loader = new PackLoader(logger, {
@@ -132,7 +153,7 @@ export default async function modifyResources(
   await loader.loadFrom(resolver);
 
   logger.info("loading modules...");
-  await loadModules(loader, modulesDir, options);
+  await loadModules(loader, modulesDir, resolvedOptions);
 
   logger.info("generating modified resources...");
   await loader.emit(output.accept);

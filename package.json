@@ -1,16 +1,28 @@
 {
   "name": "@voidshake/assembler",
-  "module": "src/main.ts",
   "type": "module",
   "version": "0.0.0",
-  "scripts": {
-    "cli": "bun run src/main.ts"
+  "module": "./dist/index.js",
+  "exports": {
+    ".": "./dist/index.js",
+    "./global": "./dist/global.js"
   },
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "assembler": "./dist/cli.js"
+  },
+  "scripts": {
+    "cli": "bun run src/main.ts",
+    "build": "tsc"
+  },
+  "files": [
+    "dist/"
+  ],
   "devDependencies": {
+    "typescript": "^6.0.1-rc",
     "@types/bun": "latest"
   },
   "peerDependencies": {
-    "typescript": "^5",
     "@pssbletrngle/data-modifier": "^0.3.5",
     "@pssbletrngle/pack-resolver": "^1.4.1",
     "@pssbletrngle/resource-merger": "^1.2.4"

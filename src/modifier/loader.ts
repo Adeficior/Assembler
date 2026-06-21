@@ -1,13 +1,10 @@
-import {
-  createLogger,
-  type Logger,
-  PackLoader,
-} from "@pssbletrngle/data-modifier";
+import { type Logger, PackLoader } from "@pssbletrngle/data-modifier";
 import { listChildren } from "@pssbletrngle/pack-resolver";
 import { extname, resolve } from "path";
 import { join } from "path/posix";
 import { pathToFileURL } from "url";
 import { logError } from "../error";
+import type { ModuleGlobalContext } from "../global";
 
 export type LoadOptions = {
   failFast: boolean;
@@ -18,9 +15,11 @@ function withGroup(options: LoadOptions): LoadOptions {
   return { ...options, logger: options.logger.group() };
 }
 
+const globalContext = global as unknown as ModuleGlobalContext;
+
 async function loadModule(name: string, path: string, options: LoadOptions) {
   try {
-    global.moduleName = name;
+    globalContext.moduleName = name;
     await import(pathToFileURL(path).toString());
     return true;
   } catch (error) {
@@ -68,17 +67,11 @@ async function loadModulesRecursive(
 export default async function loadModules(
   loader: PackLoader,
   from: string,
-  options: Partial<LoadOptions> = {},
+  options: LoadOptions,
 ) {
-  const resolvedOptions: LoadOptions = {
-    logger: createLogger(),
-    failFast: true,
-    ...options,
-  };
+  globalContext.loader = loader;
+  globalContext.logger = options.logger;
 
-  global.loader = loader;
-  global.logger = resolvedOptions.logger;
-
-  const loaded = await loadModulesRecursive(from, resolvedOptions);
-  logger.info(`loaded ${loaded} modules`);
+  const loaded = await loadModulesRecursive(from, options);
+  options.logger.info(`loaded ${loaded} modules`);
 }
