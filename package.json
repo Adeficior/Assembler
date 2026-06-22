@@ -1,7 +1,7 @@
 {
   "name": "@adeficior/assembler",
   "type": "module",
-  "version": "0.0.0",
+  "version": "0.0.0-dev",
   "module": "./dist/index.js",
   "exports": {
     ".": "./dist/index.js",
@@ -18,6 +18,15 @@
     "format": "prettier --write src",
     "test:ci": "bun run lint"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Adeficior/Assembler.git"
+  },
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Adeficior/Assembler/issues"
+  },
+  "homepage": "https://github.com/Adeficior/Assembler#readme",
   "files": [
     "dist/"
   ],
