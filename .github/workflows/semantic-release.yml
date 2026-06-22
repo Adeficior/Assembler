@@ -1,0 +1,26 @@
+# <meta>
+#    <source>@pssbletrngle/github-meta-generator</source>
+#    <version>1.0.103</version>
+#    <timestamp>2026-06-22T12:34:58.231Z</timestamp>
+#    <hash>d37cd3dba38e6a39</hash>
+# </meta>
+
+name: Trigger Semantic Release
+
+permissions:
+  contents: read
+  actions: write
+
+on:
+  workflow_dispatch:
+  release:
+    types: [published]
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: benc-uk/workflow-dispatch@v1
+        with:
+          workflow: release.yml
+          inputs: '{ "version": "${{ github.event.release.tag_name }}" }'

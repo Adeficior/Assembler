@@ -1,0 +1,34 @@
+# <meta>
+#    <source>@pssbletrngle/github-meta-generator</source>
+#    <version>1.0.103</version>
+#    <timestamp>2026-06-22T12:34:58.231Z</timestamp>
+#    <hash>549a03ac9f117d50</hash>
+# </meta>
+
+name: Trigger Prerelease
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: PssbleTrngle/find-release@v1
+        if: ${{ github.event_name != 'pull_request' }}
+        id: action
+        with:
+          type: draft
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: benc-uk/workflow-dispatch@v1
+        if: ${{ toJson(steps.action.outputs.matched) }}
+        with:
+          workflow: release.yml
+          inputs: '{ "rc": true, "version": "${{ steps.action.outputs.tag }}-rc.${{ github.run_number }}" }'

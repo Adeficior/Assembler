@@ -1,0 +1,17 @@
+// <meta>
+//    <source>@pssbletrngle/github-meta-generator</source>
+//    <version>1.0.103</version>
+//    <timestamp>2026-06-22T12:34:58.231Z</timestamp>
+//    <hash>9d04e6dbddea2b2e</hash>
+// </meta>
+
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "declaration": true,
+    "sourceMap": true,
+    "rootDir": "./src",
+    "outDir": "./dist"
+  },
+  "include": ["src"]
+}

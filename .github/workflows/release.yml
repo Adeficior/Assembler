@@ -1,0 +1,55 @@
+# <meta>
+#    <source>@pssbletrngle/github-meta-generator</source>
+#    <version>1.0.103</version>
+#    <timestamp>2026-06-22T12:34:58.230Z</timestamp>
+#    <hash>b8b37fc1efe999dd</hash>
+# </meta>
+
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      rc:
+        type: boolean
+        default: false
+      version:
+        type: string
+        required: true
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install Dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Update version
+        uses: jossef/action-set-json-field@v2
+        with:
+          file: package.json
+          field: version
+          value: ${{ github.event.inputs.version }}
+
+      - run: bun run build
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          registry-url: "https://registry.npmjs.org"
+          package-manager-cache: false
+
+      - if: ${{ github.event.inputs.rc }}
+        run: npm publish --no-git-checks --provenance --access public --tag rc
+
+      - if: ${{ !github.event.inputs.rc }}
+        run: npm publish --no-git-checks --provenance --access public
