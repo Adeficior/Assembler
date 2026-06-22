@@ -1,0 +1,6 @@
+{
+  "$schema": "https://workflows.somethingcatchy.net/schema/config.json",
+  "$version": "1.0",
+  "type": "bun-library",
+  "formatter": "prettier"
+}
