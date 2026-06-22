@@ -102,16 +102,16 @@ function createAcceptor(logger: Logger, output: string) {
   return { accept, finalize, cache };
 }
 
-const defaultOptions: LoadOptions = {
+const defaultOptions = {
   logger: createLogger(),
   failFast: true,
-};
+} satisfies Partial<LoadOptions>;
 
 export default async function generateResources(
   modulesDir: string,
   cacheDir: string,
   to: string,
-  options: Partial<LoadOptions> = {},
+  options: Partial<LoadOptions> & Pick<LoadOptions, "packFormat">,
 ) {
   const resolvedOptions: LoadOptions = {
     ...defaultOptions,
@@ -133,7 +133,7 @@ export default async function generateResources(
 
   // TODO pass options in
   const loader = new PackLoader(logger, {
-    packFormat: 48,
+    packFormat: resolvedOptions.packFormat,
     hideFrom: ["jei"],
   });
 

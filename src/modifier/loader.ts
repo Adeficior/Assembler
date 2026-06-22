@@ -1,6 +1,5 @@
-import type { PackLoader } from "@adeficior/data-modifier";
-import { type Logger } from "@adeficior/data-modifier";
-import { listChildren } from "@adeficior/pack-resolver";
+import type { PackLoader, SemVerInput } from "@adeficior/data-modifier";
+import { listChildren, type Logger } from "@adeficior/pack-resolver";
 import { extname, resolve } from "path";
 import { join } from "path/posix";
 import { pathToFileURL } from "url";
@@ -10,6 +9,7 @@ import type { ModuleGlobalContext } from "../global";
 export type LoadOptions = {
   failFast: boolean;
   logger: Logger;
+  packFormat: SemVerInput;
 };
 
 function withGroup(options: LoadOptions): LoadOptions {

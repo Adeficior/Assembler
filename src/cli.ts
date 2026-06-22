@@ -1,3 +1,4 @@
+import { packFormatOf } from "@adeficior/data-modifier";
 import { createLogger } from "@adeficior/pack-resolver";
 import parseArgs from "arg";
 import { existsSync, mkdirSync } from "fs";
@@ -27,6 +28,8 @@ if (!existsSync(cacheDir)) mkdirSync(cacheDir);
 
 const pack = await loadPack(packDir);
 
+const packFormat = packFormatOf(pack.versions.minecraft);
+
 logger.info(`assembling ${pack.name}`);
 
 if (args["--generate"]) {
@@ -34,6 +37,7 @@ if (args["--generate"]) {
   const to = resolve(resourcesDir, "generated");
   await generateResources(modulesDir, cacheDir, to, {
     logger,
+    packFormat,
     failFast: args["--fail-fast"],
   });
 }

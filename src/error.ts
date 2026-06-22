@@ -1,4 +1,4 @@
-import type { Logger } from "@adeficior/data-modifier";
+import type { Logger } from "@adeficior/pack-resolver";
 
 export function logError(
   logger: Logger,
