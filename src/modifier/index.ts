@@ -1,14 +1,13 @@
+import { PackLoader } from "@adeficior/data-modifier";
 import {
-  createLogger,
-  type Logger,
-  PackLoader,
-} from "@pssbletrngle/data-modifier";
-import {
+  type Acceptable,
   type Acceptor,
+  createLogger,
   createMergedResolver,
   createResolver,
-} from "@pssbletrngle/pack-resolver";
-import { Mergers } from "@pssbletrngle/resource-merger";
+  type Logger,
+} from "@adeficior/pack-resolver";
+import { Mergers } from "@adeficior/resource-merger";
 import crypto from "crypto";
 import { existsSync, readFileSync, rmSync, writeFileSync } from "fs";
 import { join, resolve } from "path";
@@ -33,7 +32,7 @@ function parseCacheFile(path: string) {
   return map;
 }
 
-function createHash(content: string | Buffer): string {
+function createHash(content: Acceptable): string {
   const hash = crypto.createHash("md5");
   hash.setEncoding("hex");
   hash.write(content);
@@ -46,7 +45,7 @@ function createCache(output: string) {
   const lastCache = parseCacheFile(cacheFile);
   const nextCache = new Map<string, string>();
 
-  const matches = (path: string, content: string | Buffer) => {
+  const matches = (path: string, content: Acceptable) => {
     const hash = createHash(content);
     nextCache.set(path, hash);
     return lastCache.get(path) === hash;
@@ -73,7 +72,7 @@ function createAcceptor(logger: Logger, output: string) {
   const cache = createCache(output);
 
   const cachedDatapack: Acceptor = (path, content) => {
-    if (cache.matches(path, content)) return true;
+    if (cache.matches(path, content)) return;
     return writeToDatapack(path, content);
   };
 
@@ -127,7 +126,7 @@ export default async function generateResources(
       resolve(cacheDir, "reference"),
     ],
     include: ["data/**/*.json", "assets/**/*.json"],
-    silent: true,
+    logger,
   });
 
   const output = createAcceptor(logger, to);
@@ -143,7 +142,7 @@ export default async function generateResources(
 
   const dumpDir = resolve("..", "dump");
   if (existsSync(dumpDir)) {
-    const dump = createResolver({ from: dumpDir, silent: true });
+    const dump = createResolver({ from: dumpDir, logger });
     await loader.loadRegistryDump(dump);
   } else {
     logger.warn("dump directory is missing, ID validation disabled");

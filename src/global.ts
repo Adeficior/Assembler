@@ -1,4 +1,5 @@
-import type { Logger, PackLoader } from "@pssbletrngle/data-modifier";
+import type { PackLoader } from "@adeficior/data-modifier";
+import type { Logger } from "@adeficior/pack-resolver";
 
 export type ModuleGlobalContext = {
   loader: PackLoader;

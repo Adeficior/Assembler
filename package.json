@@ -13,14 +13,20 @@
   },
   "scripts": {
     "cli": "bun run src/main.ts",
-    "build": "tsc --project tsconfig.build.json"
+    "build": "tsc --project tsconfig.build.json",
+    "lint": "eslint src",
+    "format": "prettier --write src",
+    "test:ci": "bun run lint"
   },
   "files": [
     "dist/"
   ],
   "devDependencies": {
     "typescript": "^6.0.1-rc",
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "eslint": "^10.5.0",
+    "@eslint/js": "^10.0.1",
+    "typescript-eslint": "^8.61.0"
   },
   "peerDependencies": {
     "@adeficior/data-modifier": "^1.0.0-rc.9"

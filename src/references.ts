@@ -1,4 +1,4 @@
-import type { Logger } from "@pssbletrngle/data-modifier";
+import type { Logger } from "@adeficior/pack-resolver";
 import { $ } from "bun";
 import { existsSync, mkdirSync } from "node:fs";
 import { resolve } from "node:path";

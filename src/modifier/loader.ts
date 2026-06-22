@@ -1,5 +1,6 @@
-import { type Logger, PackLoader } from "@pssbletrngle/data-modifier";
-import { listChildren } from "@pssbletrngle/pack-resolver";
+import type { PackLoader } from "@adeficior/data-modifier";
+import { type Logger } from "@adeficior/data-modifier";
+import { listChildren } from "@adeficior/pack-resolver";
 import { extname, resolve } from "path";
 import { join } from "path/posix";
 import { pathToFileURL } from "url";

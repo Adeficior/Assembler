@@ -1,4 +1,4 @@
-import type { Logger } from "@pssbletrngle/data-modifier";
+import type { Logger } from "@adeficior/data-modifier";
 
 export function logError(
   logger: Logger,

@@ -1,6 +1,10 @@
-import { createLogger, type Logger } from "@pssbletrngle/data-modifier";
-import { createMergedResolver } from "@pssbletrngle/pack-resolver";
-import { Mergers, createDefaultMergers } from "@pssbletrngle/resource-merger";
+import {
+  createLogger,
+  createMergedResolver,
+  type Logger,
+} from "@adeficior/pack-resolver";
+import type { Mergers } from "@adeficior/resource-merger";
+import { createDefaultMergers } from "@adeficior/resource-merger";
 import { existsSync, mkdirSync } from "fs";
 import { dirname, join, resolve } from "path";
 
@@ -63,7 +67,7 @@ export default async function mergeResources(
 
   async function run(merger: Mergers, include: string) {
     logger.info(`Merging ${include}...`);
-    return merger.run(createMergedResolver({ from, include, silent: true }));
+    return merger.run(createMergedResolver({ from, include, logger }));
   }
 
   const promises: Promise<void>[] = [];

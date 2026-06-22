@@ -16,7 +16,7 @@ type Pack = {
 };
 
 // TODO use
-const { RELEASE_VERSION } = process.env;
+// const { RELEASE_VERSION } = process.env;
 
 export async function loadPack(dir: string) {
   const packFile = Bun.file(resolve(dir, "pack.toml"));
