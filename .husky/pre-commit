@@ -2,7 +2,10 @@
 #    <source>@pssbletrngle/github-meta-generator</source>
 #    <version>1.0.104</version>
 #    <timestamp>2026-06-28T15:40:13.741Z</timestamp>
-#    <hash>2f6722e51d072cf9</hash>
+#    <hash>e8a379315d1fa5c9</hash>
 # </meta>
 
-tabWidth: 2
+bun run format
+bun run lint --fix
+
+git update-index --again
