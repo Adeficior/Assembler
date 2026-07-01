@@ -1,18 +1,12 @@
 import {
   createLogger,
-  createMergedResolver,
+  createResolver,
+  distributedAcceptor,
+  writeToArchive,
+  type Acceptor,
   type Logger,
 } from "@adeficior/pack-resolver";
-import type { Mergers } from "@adeficior/resource-merger";
-import { createDefaultMergers } from "@adeficior/resource-merger";
-import { existsSync, mkdirSync } from "fs";
-import { dirname, join, resolve } from "path";
-
-const ensureDirectory = (path: string) => {
-  const dir = dirname(path);
-  if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
-  return path;
-};
+import { join, resolve } from "path";
 
 export type MergeOptions = {
   logger: Logger;
@@ -40,43 +34,24 @@ export default async function mergeResources(
 
   const paxiFolder = resolve(to, "config", "paxi");
 
-  // TODO input
-  const packFormat = 48;
+  const assets = writeToArchive(
+    join(paxiFolder, "resourcepacks", "generated.zip"),
+  );
 
-  const commonOptions = {
-    title: "Modpack Resources",
-    packFormat,
-    silent: true,
-    overwrite: true,
-  };
+  const data = writeToArchive(join(paxiFolder, "datapacks", "generated.zip"));
 
-  const assets = createDefaultMergers({
-    output: ensureDirectory(join(paxiFolder, "resourcepacks", "generated.zip")),
-    ...commonOptions,
-  });
+  const content = writeToArchive(resolve(to, "contentpacks", "generated.zip"));
 
-  const data = createDefaultMergers({
-    output: ensureDirectory(join(paxiFolder, "datapacks", "generated.zip")),
-    ...commonOptions,
-  });
+  const acceptors: Record<string, Acceptor> = {};
 
-  const content = createDefaultMergers({
-    output: ensureDirectory(resolve(to, "contentpacks", "generated.zip")),
-    ...commonOptions,
-  });
+  if (include.data) acceptors["data/**"] = data;
+  if (include.assets) acceptors["assets/**"] = assets;
+  if (include.content) acceptors["content/**"] = content;
 
-  async function run(merger: Mergers, include: string) {
-    logger.info(`Merging ${include}...`);
-    return merger.run(createMergedResolver({ from, include, logger }));
-  }
+  const acceptor = distributedAcceptor(acceptors);
+  const resolver = createResolver({ from, logger });
 
-  const promises: Promise<void>[] = [];
-
-  if (include.data) promises.push(run(data, "data/**"));
-  if (include.assets) promises.push(run(assets, "assets/**"));
-  if (include.content) promises.push(run(content, "content/**"));
-
-  await Promise.all(promises);
+  await resolver.extract(acceptor);
 
   logger.info("Done!");
 }

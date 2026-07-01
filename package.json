@@ -14,6 +14,7 @@
   "scripts": {
     "cli": "bun run src/main.ts",
     "build": "tsc --project tsconfig.build.json",
+    "check": "tsc --noEmit",
     "lint": "eslint src",
     "format": "prettier --write src",
     "test:ci": "bun run lint"
@@ -38,7 +39,7 @@
     "typescript-eslint": "^8.61.0"
   },
   "dependencies": {
-    "arg": "^5.0.2",
-    "@adeficior/data-modifier": "^1.0.0-rc.12"
+    "@adeficior/data-modifier": "^1.0.0-rc.27",
+    "arg": "^5.0.2"
   }
 }

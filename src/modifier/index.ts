@@ -1,105 +1,39 @@
 import { PackLoader } from "@adeficior/data-modifier";
 import {
-  type Acceptable,
   type Acceptor,
+  cachedAcceptor,
+  createAcceptor,
+  createCombinedResolver,
   createLogger,
-  createMergedResolver,
   createResolver,
-  type Logger,
+  distributedAcceptor,
+  simpleAcceptor,
 } from "@adeficior/pack-resolver";
-import { Mergers } from "@adeficior/resource-merger";
-import crypto from "crypto";
-import { existsSync, readFileSync, rmSync, writeFileSync } from "fs";
+import { existsSync, writeFileSync } from "fs";
 import { join, resolve } from "path";
 import loadModules, { type LoadOptions } from "./loader";
 
-function parseCacheFile(path: string) {
-  const map = new Map<string, string>();
-  const seperator = " ";
+function createOutput(output: string, cacheDir: string): Acceptor {
+  const cacheFile = join(cacheDir, "cache");
+  const writeToGenerated = cachedAcceptor(
+    createAcceptor(output),
+    cacheFile,
+    async (orphans) => {
+      console.log(orphans);
+    },
+  );
 
-  if (existsSync(path)) {
-    readFileSync(path)
-      .toString()
-      .split("\n")
-      .map((it) => it.trim())
-      .filter((it) => it.includes(seperator))
-      .map((it) => it.split(seperator) as [string, string])
-      .forEach(([path, hash]) => {
-        map.set(path, hash);
-      });
-  }
+  // TODO can be folder acceptor?
+  const writeToConfig = simpleAcceptor(async (path, content) => {
+    writeFileSync(resolve("..", "config", path), (await content).toString());
+  });
 
-  return map;
-}
-
-function createHash(content: Acceptable): string {
-  const hash = crypto.createHash("md5");
-  hash.setEncoding("hex");
-  hash.write(content);
-  hash.end();
-  return hash.read();
-}
-
-function createCache(output: string) {
-  const cacheFile = join(output, "cache");
-  const lastCache = parseCacheFile(cacheFile);
-  const nextCache = new Map<string, string>();
-
-  const matches = (path: string, content: Acceptable) => {
-    const hash = createHash(content);
-    nextCache.set(path, hash);
-    return lastCache.get(path) === hash;
-  };
-
-  const emit = () => {
-    const encoded = [...nextCache.entries()]
-      .map(([key, value]) => `${key} ${value}`)
-      .join("\n");
-    writeFileSync(cacheFile, encoded);
-  };
-
-  const orphans = () => {
-    return [...lastCache.keys()]
-      .filter((it) => !nextCache.has(it))
-      .map((it) => join(output, it))
-      .filter((it) => existsSync(it));
-  };
-
-  return { matches, emit, orphans };
-}
-
-function createAcceptor(logger: Logger, output: string) {
-  const cache = createCache(output);
-
-  const cachedDatapack: Acceptor = (path, content) => {
-    if (cache.matches(path, content)) return;
-    return writeToDatapack(path, content);
-  };
-
-  const datapackMergers = new Mergers({ output, overwrite: true }, {});
-  const writeToDatapack = datapackMergers.createAcceptor();
-
-  const writeToConfig: Acceptor = (path, content) => {
-    writeFileSync(resolve("..", "config", path), content.toString());
-  };
-
-  const accept: Acceptor = (path, content) => {
-    if (path.startsWith("jei")) return writeToConfig(path, content);
-    else return cachedDatapack(path, content);
-  };
-
-  const finalize = async () => {
-    await datapackMergers.finalize();
-
-    cache.emit();
-    const orphans = cache.orphans();
-    if (orphans.length > 0) {
-      logger.info(`Removing ${orphans.length} orphan files`);
-      orphans.forEach((it) => rmSync(it));
-    }
-  };
-
-  return { accept, finalize, cache };
+  return distributedAcceptor(
+    {
+      "jei/**": writeToConfig,
+    },
+    writeToGenerated,
+  );
 }
 
 const defaultOptions = {
@@ -120,16 +54,15 @@ export default async function generateResources(
 
   const { logger } = resolvedOptions;
 
-  const resolver = createMergedResolver({
+  const resolver = createCombinedResolver({
     from: [
       resolve(cacheDir, "install", "mods"),
       resolve(cacheDir, "reference"),
     ],
-    include: ["data/**/*.json", "assets/**/*.json"],
     logger,
   });
 
-  const output = createAcceptor(logger, to);
+  const output = createOutput(to, cacheDir);
 
   // TODO pass options in
   const loader = new PackLoader(logger, {
@@ -155,6 +88,5 @@ export default async function generateResources(
   await loadModules(loader, modulesDir, resolvedOptions);
 
   logger.info("generating modified resources...");
-  await loader.emit(output.accept);
-  await output.finalize();
+  await loader.resolver.extract(output);
 }
