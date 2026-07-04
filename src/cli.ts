@@ -1,3 +1,5 @@
+#!/usr/bin/env bun
+
 import { packFormatOf } from "@adeficior/data-modifier";
 import { generateDumpTypes } from "@adeficior/data-modifier/cli";
 import {
