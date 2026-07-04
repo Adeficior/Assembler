@@ -2,30 +2,31 @@ import { PackLoader } from "@adeficior/data-modifier";
 import {
   type Acceptor,
   cachedAcceptor,
-  createAcceptor,
   createCombinedResolver,
   createLogger,
   createResolver,
   distributedAcceptor,
   simpleAcceptor,
+  writeToFolder,
 } from "@adeficior/pack-resolver";
-import { existsSync, writeFileSync } from "fs";
+import { existsSync, rmSync, writeFileSync } from "fs";
 import { join, resolve } from "path";
 import loadModules, { type LoadOptions } from "./loader";
 
 function createOutput(output: string, cacheDir: string): Acceptor {
   const cacheFile = join(cacheDir, "cache");
   const writeToGenerated = cachedAcceptor(
-    createAcceptor(output),
+    writeToFolder(output),
     cacheFile,
     async (orphans) => {
-      console.log(orphans);
+      const realPaths = orphans.map((it) => resolve(output, it));
+      realPaths.forEach((it) => rmSync(it));
     },
   );
 
   // TODO can be folder acceptor?
   const writeToConfig = simpleAcceptor(async (path, content) => {
-    writeFileSync(resolve("..", "config", path), (await content).toString());
+    writeFileSync(join("..", "config", path), (await content).toString());
   });
 
   return distributedAcceptor(
@@ -55,10 +56,7 @@ export default async function generateResources(
   const { logger } = resolvedOptions;
 
   const resolver = createCombinedResolver({
-    from: [
-      resolve(cacheDir, "install", "mods"),
-      resolve(cacheDir, "reference"),
-    ],
+    from: [join(cacheDir, "install", "mods"), join(cacheDir, "reference")],
     logger,
   });
 
@@ -73,7 +71,7 @@ export default async function generateResources(
   // TODO move to loader
   loader.registerRegistry("minecraft:worldgen/biome");
 
-  const dumpDir = resolve("..", "dump");
+  const dumpDir = resolve("dump");
   if (existsSync(dumpDir)) {
     const dump = createResolver({ from: dumpDir, logger });
     await loader.loadRegistryDump(dump);
@@ -88,5 +86,5 @@ export default async function generateResources(
   await loadModules(loader, modulesDir, resolvedOptions);
 
   logger.info("generating modified resources...");
-  await loader.resolver.extract(output);
+  await loader.emit(output);
 }

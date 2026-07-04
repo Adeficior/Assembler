@@ -1,6 +1,10 @@
 import type { PackLoader, SemVerInput } from "@adeficior/data-modifier";
-import { listChildren, type Logger } from "@adeficior/pack-resolver";
-import { extname, resolve } from "path";
+import {
+  extendLoggerContext,
+  listChildren,
+  type Logger,
+} from "@adeficior/pack-resolver";
+import { extname } from "path";
 import { join } from "path/posix";
 import { pathToFileURL } from "url";
 import { logError } from "../error";
@@ -12,14 +16,11 @@ export type LoadOptions = {
   packFormat: SemVerInput;
 };
 
-function withGroup(options: LoadOptions): LoadOptions {
-  return { ...options, logger: options.logger.group() };
-}
-
 const globalContext = global as unknown as ModuleGlobalContext;
 
 async function loadModule(name: string, path: string, options: LoadOptions) {
   try {
+    options.logger.debug(`loading ${path}...`);
     globalContext.moduleName = name;
     await import(pathToFileURL(path).toString());
     return true;
@@ -39,21 +40,22 @@ async function loadModulesRecursive(
   options: LoadOptions,
   dir = ".",
 ): Promise<number> {
-  const children = listChildren(resolve(from, dir));
+  const children = listChildren(join(from, dir));
 
   let total = 0;
   for (const it of children) {
     if (it.info.isDirectory()) {
-      options.logger.info(`${it.name}/`);
-      total += await loadModulesRecursive(from, withGroup(options), it.name);
-    }
-
-    const ext = extname(__filename);
-
-    if (it.info.isFile() && extname(it.path) === ext) {
+      total += await loadModulesRecursive(from, options, it.name);
+    } else if (
+      it.info.isFile() &&
+      [".js", ".mjs", ".ts", ".mts"].includes(extname(it.path))
+    ) {
       const name = join(dir, it.name.slice(0, -3));
 
-      const loaded = await loadModule(name, it.path, options);
+      const loaded = await loadModule(name, it.path, {
+        ...options,
+        logger: extendLoggerContext(options.logger, { module: it.path }),
+      });
 
       if (loaded) {
         options.logger.info(`loaded ${it.name}`);

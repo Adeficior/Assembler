@@ -1,5 +1,6 @@
+import type { Logger } from "@adeficior/pack-resolver";
 import { TOML } from "bun";
-import { resolve } from "node:path";
+import { join } from "node:path";
 
 type Pack = {
   name: string;
@@ -15,13 +16,25 @@ type Pack = {
   };
 };
 
-// TODO use
-// const { RELEASE_VERSION } = process.env;
+const { RELEASE_VERSION } = process.env;
 
-export async function loadPack(dir: string) {
-  const packFile = Bun.file(resolve(dir, "pack.toml"));
+export async function loadPack(dir: string, logger: Logger) {
+  const packFile = Bun.file(join(dir, "pack.toml"));
 
-  const parsed = TOML.parse(await packFile.text()) as Pack;
+  const raw = await packFile.text();
+  const parsed = TOML.parse(raw) as Pack;
+
+  if (RELEASE_VERSION) {
+    parsed.version = RELEASE_VERSION;
+    const modified = raw.replace(
+      /(version\s*=\s*").+(")/,
+      `$1${RELEASE_VERSION}$2`,
+    );
+
+    logger.info(`updating pack.toml version to ${RELEASE_VERSION}`);
+
+    await packFile.write(modified);
+  }
 
   return parsed;
 }

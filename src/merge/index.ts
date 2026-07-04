@@ -1,57 +1,58 @@
 import {
-  createLogger,
-  createResolver,
   distributedAcceptor,
+  exists,
   writeToArchive,
   type Acceptor,
-  type Logger,
+  type Resolver,
 } from "@adeficior/pack-resolver";
-import { join, resolve } from "path";
+import { join } from "path";
 
 export type MergeOptions = {
-  logger: Logger;
   data: boolean;
   assets: boolean;
   content: boolean;
+  cacheDir?: string;
 };
 
 const defaultOptions: MergeOptions = {
-  assets: true,
+  assets: false,
   data: true,
   content: false,
-  logger: createLogger(),
 };
 
 export default async function mergeResources(
-  from: string,
+  from: Resolver,
   to: string,
   options: Partial<MergeOptions> = {},
 ) {
-  const { logger, ...include } = {
+  const { cacheDir, ...include } = {
     ...defaultOptions,
     ...options,
   };
 
-  const paxiFolder = resolve(to, "config", "paxi");
-
-  const assets = writeToArchive(
-    join(paxiFolder, "resourcepacks", "generated.zip"),
-  );
-
-  const data = writeToArchive(join(paxiFolder, "datapacks", "generated.zip"));
-
-  const content = writeToArchive(resolve(to, "contentpacks", "generated.zip"));
+  const paxiFolder = join(to, "config", "paxi");
 
   const acceptors: Record<string, Acceptor> = {};
 
-  if (include.data) acceptors["data/**"] = data;
-  if (include.assets) acceptors["assets/**"] = assets;
-  if (include.content) acceptors["content/**"] = content;
+  const write = (prefix: string, path: string[]) => {
+    const tempDir = exists(cacheDir)
+      ? join(cacheDir, "merged", prefix)
+      : undefined;
+
+    acceptors[`${prefix}/**`] = writeToArchive(join(...path), { tempDir });
+  };
+
+  if (include.data) {
+    write("data", [paxiFolder, "datapacks", "generated.zip"]);
+  }
+  if (include.assets) {
+    write("assets", [paxiFolder, "resourcepacks", "generated.zip"]);
+  }
+  if (include.content) {
+    write("content", [to, "contentpacks", "generated.zip"]);
+  }
 
   const acceptor = distributedAcceptor(acceptors);
-  const resolver = createResolver({ from, logger });
 
-  await resolver.extract(acceptor);
-
-  logger.info("Done!");
+  await from.extract(acceptor);
 }
