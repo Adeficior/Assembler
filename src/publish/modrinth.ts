@@ -6,6 +6,15 @@ function extractLoader({ versions }: Pack) {
   if (versions.forge) return "forge";
 }
 
+type ModrinthError = {
+  description: string;
+  error: string;
+};
+
+type VersionCreated = {
+  id: string;
+};
+
 export async function uploadToModrinth(
   pack: Pack,
   exportedFile: string,
@@ -18,21 +27,28 @@ export async function uploadToModrinth(
 
   const body = new FormData();
 
+  const fileName = "pack";
+
   // TODO changelog
   body.set(
     "data",
     JSON.stringify({
       name: pack.version,
       version_number: pack.version,
+      dependencies: [],
       game_versions: [pack.versions.minecraft],
+      version_type: "release",
       loaders: [extractLoader(pack)],
+      featured: true,
+      status: "listed",
       project_id: projectId,
+      file_parts: fileName,
+      primary_file: fileName,
       environment: "client_and_server",
-      file_parts: ["pack"],
     }),
   );
 
-  body.set("pack", file);
+  body.set(fileName, file);
 
   const response = await fetch(`https://api.modrinth.com/v2/version`, {
     method: "POST",
@@ -45,13 +61,13 @@ export async function uploadToModrinth(
 
   if (!response.ok) {
     if (response.headers.get("Content-Type")?.startsWith("application/json")) {
-      const { description, error } = (await response.json()) as {
-        description: string;
-        error: string;
-      };
+      const { description, error } = (await response.json()) as ModrinthError;
       throw new Error(`modrinth responded with ${error}: ${description}`);
     } else {
       throw new Error(`modrinth responded with ${response.status}`);
     }
   }
+
+  const { id } = (await response.json()) as VersionCreated;
+  return id;
 }

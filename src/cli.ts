@@ -51,7 +51,8 @@ async function run() {
     if (!projectId) throw new Error("modrinth project id not passed");
     if (!token) throw new Error("modrinth token not passed");
 
-    await uploadToModrinth(pack, exportedFile, projectId, token);
+    const id = await uploadToModrinth(pack, exportedFile, projectId, token);
+    logger.info(`uploaded version ${id} to modrinth`);
   }
 
   if (actions.includes("merge")) {
