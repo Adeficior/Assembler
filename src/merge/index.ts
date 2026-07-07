@@ -17,7 +17,7 @@ export type MergeOptions = {
 
 const defaultOptions: MergeOptions = {
   assets: false,
-  data: true,
+  data: false,
   content: false,
 };
 
