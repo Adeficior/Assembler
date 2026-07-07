@@ -40,6 +40,7 @@ async function run() {
         packFormat,
         failFast: args.failFast,
       },
+      pack,
     );
   }
 

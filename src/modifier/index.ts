@@ -11,6 +11,7 @@ import {
 } from "@adeficior/pack-resolver";
 import { exists, rm, writeFile } from "node:fs/promises";
 import { join, resolve } from "path";
+import type { Pack } from "../pack";
 import loadModules, { type LoadOptions } from "./loader";
 
 async function createOutput(
@@ -50,6 +51,7 @@ export default async function generateResources(
   cacheDir: string,
   to: string,
   options: Partial<LoadOptions> & Pick<LoadOptions, "packFormat">,
+  pack: Pack,
 ) {
   const resolvedOptions: LoadOptions = {
     ...defaultOptions,
@@ -89,5 +91,5 @@ export default async function generateResources(
   await loadModules(loader, modulesDir, resolvedOptions);
 
   logger.info("generating modified resources...");
-  await loader.emit(output);
+  await loader.emit(output, { description: `${pack.name} resources` });
 }
