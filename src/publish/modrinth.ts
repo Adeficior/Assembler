@@ -34,7 +34,7 @@ export async function uploadToModrinth(
 
   body.set("pack", file);
 
-  await fetch(`https://api.modrinth.com/v2/version`, {
+  const response = await fetch(`https://api.modrinth.com/v2/version`, {
     method: "POST",
     body,
     headers: {
@@ -42,4 +42,8 @@ export async function uploadToModrinth(
       Authorization: token,
     },
   });
+
+  if (!response.ok) {
+    throw new Error(`modrinth responded with ${response.status}`);
+  }
 }
