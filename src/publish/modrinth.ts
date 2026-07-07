@@ -43,7 +43,7 @@ export async function uploadToModrinth(
       featured: true,
       status: "listed",
       project_id: projectId,
-      file_parts: fileName,
+      file_parts: [fileName],
       primary_file: fileName,
       environment: "client_and_server",
       file_types: {
