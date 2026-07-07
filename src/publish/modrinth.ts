@@ -46,6 +46,9 @@ export async function uploadToModrinth(
       file_parts: fileName,
       primary_file: fileName,
       environment: "client_and_server",
+      file_types: {
+        [fileName]: "application/x-modrinth-modpack+zip",
+      },
     }),
   );
 
