@@ -22,7 +22,9 @@ export async function uploadToModrinth(
   projectId: string,
   token: string,
 ) {
-  const file = Bun.file(exportedFile);
+  const file = Bun.file(exportedFile, {
+    type: "application/x-modrinth-modpack+zip",
+  });
   if (!(await file.exists()))
     throw new Error(`exported file could not be found at '${exportedFile}'`);
 
@@ -46,9 +48,6 @@ export async function uploadToModrinth(
       file_parts: [fileName],
       primary_file: fileName,
       environment: "client_and_server",
-      file_types: {
-        [fileName]: "application/x-modrinth-modpack+zip",
-      },
     }),
   );
 
