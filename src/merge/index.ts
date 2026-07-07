@@ -1,6 +1,7 @@
 import {
   distributedAcceptor,
   notNull,
+  simpleAcceptor,
   writeToArchive,
   type Acceptor,
   type Resolver,
@@ -54,7 +55,11 @@ export default async function mergeResources(
     await write("content", [to, "contentpacks", "generated.zip"]);
   }
 
-  const acceptor = distributedAcceptor(acceptors);
+  const fallback = simpleAcceptor(async (...args) => {
+    await Promise.all(Object.values(acceptors).map((it) => it.accept(...args)));
+  });
+
+  const acceptor = distributedAcceptor(acceptors, fallback);
 
   await from.extract(acceptor);
 }
