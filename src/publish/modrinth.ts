@@ -16,6 +16,12 @@ type VersionCreated = {
   id: string;
 };
 
+async function getChangelog() {
+  const { CHANGELOG } = process.env;
+  if (CHANGELOG) return CHANGELOG;
+  return "automatic release";
+}
+
 export async function uploadToModrinth(
   pack: Pack,
   exportedFile: string,
@@ -32,7 +38,6 @@ export async function uploadToModrinth(
 
   const fileName = basename(exportedFile);
 
-  // TODO changelog
   body.set(
     "data",
     JSON.stringify({
@@ -40,10 +45,11 @@ export async function uploadToModrinth(
       version_number: pack.version,
       dependencies: [],
       game_versions: [pack.versions.minecraft],
-      version_type: "release",
+      version_type: pack.options?.["release-type"] ?? "release",
       loaders: [extractLoader(pack)],
       featured: true,
       status: "listed",
+      changelog: await getChangelog(),
       project_id: projectId,
       file_parts: [fileName],
       primary_file: fileName,
