@@ -1,6 +1,6 @@
 import {
   distributedAcceptor,
-  exists,
+  notNull,
   writeToArchive,
   type Acceptor,
   type Resolver,
@@ -34,22 +34,24 @@ export default async function mergeResources(
 
   const acceptors: Record<string, Acceptor> = {};
 
-  const write = (prefix: string, path: string[]) => {
-    const tempDir = exists(cacheDir)
+  const write = async (prefix: string, path: string[]) => {
+    const tempDir = notNull(cacheDir)
       ? join(cacheDir, "merged", prefix)
       : undefined;
 
-    acceptors[`${prefix}/**`] = writeToArchive(join(...path), { tempDir });
+    acceptors[`${prefix}/**`] = await writeToArchive(join(...path), {
+      tempDir,
+    });
   };
 
   if (include.data) {
-    write("data", [paxiFolder, "datapacks", "generated.zip"]);
+    await write("data", [paxiFolder, "datapacks", "generated.zip"]);
   }
   if (include.assets) {
-    write("assets", [paxiFolder, "resourcepacks", "generated.zip"]);
+    await write("assets", [paxiFolder, "resourcepacks", "generated.zip"]);
   }
   if (include.content) {
-    write("content", [to, "contentpacks", "generated.zip"]);
+    await write("content", [to, "contentpacks", "generated.zip"]);
   }
 
   const acceptor = distributedAcceptor(acceptors);

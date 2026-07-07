@@ -9,24 +9,27 @@ import {
   simpleAcceptor,
   writeToFolder,
 } from "@adeficior/pack-resolver";
-import { existsSync, rmSync, writeFileSync } from "fs";
+import { exists, rm, writeFile } from "node:fs/promises";
 import { join, resolve } from "path";
 import loadModules, { type LoadOptions } from "./loader";
 
-function createOutput(output: string, cacheDir: string): Acceptor {
+async function createOutput(
+  output: string,
+  cacheDir: string,
+): Promise<Acceptor> {
   const cacheFile = join(cacheDir, "cache");
-  const writeToGenerated = cachedAcceptor(
+  const writeToGenerated = await cachedAcceptor(
     writeToFolder(output),
     cacheFile,
     async (orphans) => {
       const realPaths = orphans.map((it) => resolve(output, it));
-      realPaths.forEach((it) => rmSync(it));
+      await Promise.all(realPaths.map((it) => rm(it)));
     },
   );
 
   // TODO can be folder acceptor?
   const writeToConfig = simpleAcceptor(async (path, content) => {
-    writeFileSync(join("..", "config", path), (await content).toString());
+    await writeFile(join("..", "config", path), (await content).toString());
   });
 
   return distributedAcceptor(
@@ -55,12 +58,12 @@ export default async function generateResources(
 
   const { logger } = resolvedOptions;
 
-  const resolver = createCombinedResolver({
+  const resolver = await createCombinedResolver({
     from: [join(cacheDir, "install", "mods"), join(cacheDir, "reference")],
     logger,
   });
 
-  const output = createOutput(to, cacheDir);
+  const output = await createOutput(to, cacheDir);
 
   // TODO pass options in
   const loader = new PackLoader(logger, {
@@ -72,8 +75,8 @@ export default async function generateResources(
   loader.registerRegistry("minecraft:worldgen/biome");
 
   const dumpDir = resolve("dump");
-  if (existsSync(dumpDir)) {
-    const dump = createResolver({ from: dumpDir, logger });
+  if (await exists(dumpDir)) {
+    const dump = await createResolver({ from: dumpDir, logger });
     await loader.loadRegistryDump(dump);
   } else {
     logger.warn("dump directory is missing, ID validation disabled");

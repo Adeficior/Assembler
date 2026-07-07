@@ -32,14 +32,15 @@
     "dist/"
   ],
   "devDependencies": {
-    "typescript": "^6.0.1-rc",
+    "@eslint/js": "^10.0.1",
     "@types/bun": "latest",
     "eslint": "^10.5.0",
-    "@eslint/js": "^10.0.1",
+    "husky": "^9.1.7",
+    "typescript": "^6.0.1-rc",
     "typescript-eslint": "^8.61.0"
   },
   "dependencies": {
-    "@adeficior/data-modifier": "^1.0.0-rc.40",
+    "@adeficior/data-modifier": "^1.0.0-rc.42",
     "arg": "^5.0.2",
     "winston": "^3.19.0"
   }

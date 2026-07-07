@@ -40,7 +40,7 @@ async function loadModulesRecursive(
   options: LoadOptions,
   dir = ".",
 ): Promise<number> {
-  const children = listChildren(join(from, dir));
+  const children = await listChildren(join(from, dir));
 
   let total = 0;
   for (const it of children) {

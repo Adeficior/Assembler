@@ -87,7 +87,7 @@ if (args["--generate"]) {
 
 if (args["--merge"]) {
   // TODO mergingAcceptor
-  const resolvers: Resolver[] = [];
+  const resolvers: Promise<Resolver>[] = [];
   if (existsSync(resourcesDir))
     resolvers.push(createCombinedResolver({ from: resourcesDir, logger }));
   if (existsSync(generatedOutput))
@@ -97,7 +97,11 @@ if (args["--merge"]) {
     throw new Error("no resources to merge");
   }
 
-  await mergeResources(combineResolvers(resolvers), packDir, { cacheDir });
+  await mergeResources(
+    combineResolvers(await Promise.all(resolvers)),
+    packDir,
+    { cacheDir },
+  );
 }
 
 logger.info("Done!");
