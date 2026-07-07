@@ -2,7 +2,7 @@ import type { Logger } from "@adeficior/pack-resolver";
 import { TOML } from "bun";
 import { join } from "node:path";
 
-type Pack = {
+export type Pack = {
   name: string;
   author?: string;
   version?: string;
@@ -13,6 +13,9 @@ type Pack = {
   };
   versions: {
     minecraft: string;
+    neoforge?: string;
+    fabric?: string;
+    forge?: string;
   };
 };
 

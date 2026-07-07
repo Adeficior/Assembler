@@ -6,103 +6,85 @@ import {
   combineResolvers,
   createCombinedResolver,
   createResolver,
-  type Logger,
   type Resolver,
 } from "@adeficior/pack-resolver";
-import parseArgs from "arg";
-import { existsSync, mkdirSync } from "fs";
+import { exists } from "fs/promises";
 import { join } from "path";
-import winston from "winston";
 import { generateResources, mergeResources } from ".";
-import { loadPack } from "./pack";
+import getArguments from "./args";
+import { uploadToModrinth } from "./publish/modrinth";
 import cloneReferences from "./references";
 import { generateGlobalTypes } from "./types";
 
-const args = parseArgs({
-  "--generate": Boolean,
-  "--prepare": Boolean,
-  "--merge": Boolean,
-  "--resources-dir": String,
-  "--pack-dir": String,
-  "--modules-dir": String,
-  "--cache-dir": String,
-  "--fail-fast": Boolean,
-});
+async function run() {
+  const { actions, logger, pack, ...args } = await getArguments();
 
-const resourcesDir = args["--resources-dir"] ?? "resources";
-const packDir = args["--pack-dir"] ?? "pack";
-const modulesDir = args["--modules-dir"] ?? "gen";
-const cacheDir = args["--cache-dir"] ?? ".assembler";
-const logFolder = join(cacheDir, "logs");
-
-const logger = winston.createLogger({
-  level: "info",
-  format: winston.format.simple(),
-  transports: [
-    new winston.transports.File({
-      options: { flags: "w" },
-      level: "debug",
-      filename: join(logFolder, "debug.log"),
-    }),
-    //  new winston.transports.File({
-    //    options: { flags: "w" },
-    //    level: "trace",
-    //    filename: join(logFolder, "trace.log"),
-    //  }),
-    new winston.transports.Console(),
-  ],
-  levels: {
-    ...winston.config.cli.levels,
-    trace: 9,
-  },
-}) as unknown as Logger;
-
-if (args["--prepare"]) {
-  const typesDir = join(cacheDir, "@types");
-  await Promise.all([
-    generateGlobalTypes(typesDir, logger),
-    generateDumpTypes("dump", typesDir, logger),
-  ]);
-  process.exit(0);
-}
-
-if (!existsSync(cacheDir)) mkdirSync(cacheDir);
-
-const pack = await loadPack(packDir, logger);
-
-const packFormat = packFormatOf(pack.versions.minecraft);
-
-logger.info(`assembling ${pack.name}`);
-
-const generatedOutput = join(cacheDir, "generated");
-
-if (args["--generate"]) {
-  await cloneReferences(cacheDir, pack.versions.minecraft, logger);
-  await generateResources(modulesDir, cacheDir, generatedOutput, {
-    logger,
-    packFormat,
-    failFast: args["--fail-fast"],
-  });
-}
-
-if (args["--merge"]) {
-  // TODO mergingAcceptor
-  const resolvers: Promise<Resolver>[] = [];
-  if (existsSync(resourcesDir))
-    resolvers.push(createCombinedResolver({ from: resourcesDir, logger }));
-  if (existsSync(generatedOutput))
-    resolvers.push(createResolver({ from: generatedOutput, logger }));
-
-  if (resolvers.length === 0) {
-    throw new Error("no resources to merge");
+  if (actions.includes("prepare")) {
+    const typesDir = join(args.cacheDir, "@types");
+    await Promise.all([
+      generateGlobalTypes(typesDir, logger),
+      generateDumpTypes("dump", typesDir, logger),
+    ]);
   }
 
-  await mergeResources(
-    combineResolvers(await Promise.all(resolvers)),
-    packDir,
-    { cacheDir },
-  );
+  const packFormat = packFormatOf(pack.versions.minecraft);
+
+  if (actions.includes("generate")) {
+    await cloneReferences(args.cacheDir, pack.versions.minecraft, logger);
+    await generateResources(
+      args.modulesDir,
+      args.cacheDir,
+      args.generatedOutput,
+      {
+        logger,
+        packFormat,
+        failFast: args.failFast,
+      },
+    );
+  }
+
+  if (actions.includes("publish")) {
+    if (!pack.version) throw new Error("pack does not have a set version");
+    const exportedFile = `${pack.name}-${pack.version}.mrpack`;
+
+    const { projectId, token } = args.modrinth;
+    if (!projectId) throw new Error("modrinth project id not passed");
+    if (!token) throw new Error("modrinth token not passed");
+
+    await uploadToModrinth(pack, exportedFile, projectId, token);
+  }
+
+  if (actions.includes("merge")) {
+    // TODO mergingAcceptor
+    const resolvers: Promise<Resolver>[] = [];
+    if (await exists(args.resourcesDir))
+      resolvers.push(
+        createCombinedResolver({ from: args.resourcesDir, logger }),
+      );
+    if (await exists(args.generatedOutput))
+      resolvers.push(createResolver({ from: args.generatedOutput, logger }));
+
+    if (resolvers.length === 0) {
+      throw new Error("no resources to merge");
+    }
+
+    await mergeResources(
+      combineResolvers(await Promise.all(resolvers)),
+      args.packDir,
+      { cacheDir: args.cacheDir },
+    );
+  }
+
+  logger.info("Done!");
 }
 
-logger.info("Done!");
-process.exit(0);
+/* eslint-disable no-console */
+try {
+  await run();
+  process.exit(0);
+} catch (e) {
+  if (e instanceof Error) console.error(e.message);
+  else console.error("an unknown error occured");
+  process.exit(1);
+}
+/* eslint-enable no-console */

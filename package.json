@@ -12,7 +12,7 @@
     "assembler": "./dist/cli.js"
   },
   "scripts": {
-    "cli": "bun run src/main.ts",
+    "cli": "bun run src/cli.ts",
     "build": "tsc --project tsconfig.build.json",
     "check": "tsc --noEmit",
     "lint": "eslint src",
