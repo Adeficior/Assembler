@@ -1,3 +1,4 @@
+import { basename } from "node:path";
 import type { Pack } from "../pack";
 
 function extractLoader({ versions }: Pack) {
@@ -27,7 +28,7 @@ export async function uploadToModrinth(
 
   const body = new FormData();
 
-  const fileName = "pack";
+  const fileName = basename(exportedFile);
 
   // TODO changelog
   body.set(
