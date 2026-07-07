@@ -10,7 +10,7 @@ import {
 } from "@adeficior/pack-resolver";
 import { exists } from "fs/promises";
 import { join } from "path";
-import { generateResources, mergeResources, type MergeOptions } from ".";
+import { generateResources, mergeResources } from ".";
 import getArguments from "./args";
 import { uploadToModrinth } from "./publish/modrinth";
 import cloneReferences from "./references";
@@ -70,17 +70,10 @@ async function run() {
       throw new Error("no resources to merge");
     }
 
-    // TODO or if resources contain
-    const includes: Partial<MergeOptions> = {
-      assets: await exists(join(args.generatedOutput, "assets")),
-      data: await exists(join(args.generatedOutput, "data")),
-      content: await exists(join(args.generatedOutput, "content")),
-    };
-
     await mergeResources(
       combineResolvers(await Promise.all(resolvers)),
       args.packDir,
-      { cacheDir: args.cacheDir, ...includes },
+      { cacheDir: args.cacheDir },
     );
   }
 

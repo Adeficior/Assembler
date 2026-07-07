@@ -9,28 +9,14 @@ import {
 import { join } from "path";
 
 export type MergeOptions = {
-  data: boolean;
-  assets: boolean;
-  content: boolean;
   cacheDir?: string;
-};
-
-const defaultOptions: MergeOptions = {
-  assets: false,
-  data: false,
-  content: false,
 };
 
 export default async function mergeResources(
   from: Resolver,
   to: string,
-  options: Partial<MergeOptions> = {},
+  { cacheDir }: Partial<MergeOptions> = {},
 ) {
-  const { cacheDir, ...include } = {
-    ...defaultOptions,
-    ...options,
-  };
-
   const paxiFolder = join(to, "config", "paxi");
 
   const acceptors: Record<string, Acceptor> = {};
@@ -45,16 +31,11 @@ export default async function mergeResources(
     });
   };
 
-  if (include.data) {
-    await write("data", [paxiFolder, "datapacks", "generated.zip"]);
-  }
-  if (include.assets) {
-    await write("assets", [paxiFolder, "resourcepacks", "generated.zip"]);
-  }
-  if (include.content) {
-    await write("content", [to, "contentpacks", "generated.zip"]);
-  }
+  await write("data", [paxiFolder, "datapacks", "generated.zip"]);
+  await write("assets", [paxiFolder, "resourcepacks", "generated.zip"]);
+  await write("content", [to, "contentpacks", "generated.zip"]);
 
+  // TODO write to archive check for actual files
   const fallback = simpleAcceptor(async (...args) => {
     await Promise.all(Object.values(acceptors).map((it) => it.accept(...args)));
   });
