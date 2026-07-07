@@ -44,6 +44,14 @@ export async function uploadToModrinth(
   });
 
   if (!response.ok) {
-    throw new Error(`modrinth responded with ${response.status}`);
+    if (response.headers.get("Content-Type")?.startsWith("application/json")) {
+      const { description, error } = (await response.json()) as {
+        description: string;
+        error: string;
+      };
+      throw new Error(`modrinth responded with ${error}: ${description}`);
+    } else {
+      throw new Error(`modrinth responded with ${response.status}`);
+    }
   }
 }
