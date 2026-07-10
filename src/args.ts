@@ -63,7 +63,7 @@ export default async function getArguments() {
     types: join(cacheDir, "@types"),
   };
 
-  if (pack.versions.minecraft) throw new Error("minecraft version not set");
+  if (!pack.versions.minecraft) throw new Error("minecraft version not set");
   const packFormat = packFormatOf(pack.versions.minecraft);
 
   return {
