@@ -16,7 +16,7 @@ import { generateGlobalTypes } from "./types";
 
 async function prepareAssembledPack(from: string, to: string) {
   if (await exists(to)) await rm(to, { recursive: true });
-  await cp(from, to);
+  await cp(from, to, { recursive: true });
 }
 
 async function run() {
