@@ -1,3 +1,4 @@
+import { packFormatOf } from "@adeficior/data-modifier";
 import { ensureDir } from "@adeficior/pack-resolver";
 import parseArgs from "arg";
 import { join } from "node:path";
@@ -6,6 +7,9 @@ import { loadPack } from "./pack";
 
 export type CliAction = "merge" | "generate" | "prepare" | "publish";
 const subCommands: CliAction[] = ["prepare", "publish"];
+
+export type CliOptions = Awaited<ReturnType<typeof getArguments>>;
+export type Options = Omit<CliOptions, "actions">;
 
 export default async function getArguments() {
   const args = parseArgs({
@@ -25,6 +29,7 @@ export default async function getArguments() {
   const cacheDir = args["--cache-dir"] ?? ".assembler";
   const logFolder = join(cacheDir, "logs");
   const generatedOutput = join(cacheDir, "generated");
+  const assembledPackDir = join(cacheDir, "pack");
 
   const failFast = args["--fail-fast"];
 
@@ -45,13 +50,26 @@ export default async function getArguments() {
   const logger = await createLogger(logFolder);
   const pack = await loadPack(packDir, logger);
 
+  const dirs = {
+    pack: packDir,
+    assembledPack: assembledPackDir,
+    modules: modulesDir,
+    resources: resourcesDir,
+    cache: cacheDir,
+    install: join(cacheDir, "install"),
+    references: join(cacheDir, "reference"),
+    generated: generatedOutput,
+    dump: "dump",
+    types: join(cacheDir, "@types"),
+  };
+
+  if (pack.versions.minecraft) throw new Error("minecraft version not set");
+  const packFormat = packFormatOf(pack.versions.minecraft);
+
   return {
-    resourcesDir,
-    packDir,
-    modulesDir,
-    cacheDir,
+    packFormat,
+    dirs,
     actions,
-    generatedOutput,
     failFast,
     pack,
     logger,

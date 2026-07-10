@@ -1,22 +1,15 @@
-import type { PackLoader, SemVerInput } from "@adeficior/data-modifier";
-import {
-  extendLoggerContext,
-  listChildren,
-  type Logger,
-} from "@adeficior/pack-resolver";
+import type { PackLoader } from "@adeficior/data-modifier";
+import { extendLoggerContext, listChildren } from "@adeficior/pack-resolver";
 import { extname } from "path";
 import { join } from "path/posix";
 import { pathToFileURL } from "url";
+import type { Options } from "../args";
 import { logError } from "../error";
 import type { ModuleGlobalContext } from "../global";
 
-export type LoadOptions = {
-  failFast: boolean;
-  logger: Logger;
-  packFormat: SemVerInput;
-};
-
 const globalContext = global as unknown as ModuleGlobalContext;
+
+type LoadOptions = Pick<Options, "failFast" | "logger">;
 
 async function loadModule(name: string, path: string, options: LoadOptions) {
   try {

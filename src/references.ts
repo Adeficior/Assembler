@@ -1,33 +1,27 @@
-import type { Logger } from "@adeficior/pack-resolver";
+import { ensureDir, type Logger } from "@adeficior/pack-resolver";
 import { $ } from "bun";
-import { existsSync, mkdirSync } from "node:fs";
+import { existsSync } from "node:fs";
 import { join } from "node:path";
+import type { Options } from "./args";
 
 const referencesRepo = "https://github.com/misode/mcmeta.git";
 
-export default async function cloneReferences(
-  cacheDir: string,
-  version: string,
-  logger: Logger,
-) {
-  if (!version) throw new Error("minecraft version not set");
-  const referencesDir = join(cacheDir, "reference");
-
-  if (!existsSync(referencesDir)) mkdirSync(referencesDir);
+export default async function cloneReferences({ pack, dirs, logger }: Options) {
+  await ensureDir(dirs.references);
 
   logger.info("cloning references...");
 
   await Promise.all([
     cloneReference(
-      referencesDir,
+      dirs.references,
       "vanilla-assets",
-      `${version}-assets-json`,
+      `${pack.versions.minecraft}-assets-json`,
       logger,
     ),
     cloneReference(
-      referencesDir,
+      dirs.references,
       "vanilla-data",
-      `${version}-data-json`,
+      `${pack.versions.minecraft}-data-json`,
       logger,
     ),
   ]);

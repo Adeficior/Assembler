@@ -3,7 +3,6 @@ import {
   type Acceptor,
   cachedAcceptor,
   createCombinedResolver,
-  createLogger,
   createResolver,
   distributedAcceptor,
   simpleAcceptor,
@@ -11,8 +10,8 @@ import {
 } from "@adeficior/pack-resolver";
 import { exists, rm, writeFile } from "node:fs/promises";
 import { join, resolve } from "path";
-import type { Pack } from "../pack";
-import loadModules, { type LoadOptions } from "./loader";
+import type { Options } from "../args";
+import loadModules from "./loader";
 
 async function createOutput(
   output: string,
@@ -41,35 +40,23 @@ async function createOutput(
   );
 }
 
-const defaultOptions = {
-  logger: createLogger(),
-  failFast: true,
-} satisfies Partial<LoadOptions>;
-
-export default async function generateResources(
-  modulesDir: string,
-  cacheDir: string,
-  to: string,
-  options: Partial<LoadOptions> & Pick<LoadOptions, "packFormat">,
-  pack: Pack,
-) {
-  const resolvedOptions: LoadOptions = {
-    ...defaultOptions,
-    ...options,
-  };
-
-  const { logger } = resolvedOptions;
-
+export default async function generateResources({
+  dirs,
+  logger,
+  pack,
+  packFormat,
+  failFast,
+}: Options) {
   const resolver = await createCombinedResolver({
-    from: [join(cacheDir, "install", "mods"), join(cacheDir, "reference")],
+    from: [join(dirs.install, "mods"), join(dirs.references)],
     logger,
   });
 
-  const output = await createOutput(to, cacheDir);
+  const output = await createOutput(dirs.generated, dirs.cache);
 
   // TODO pass options in
   const loader = new PackLoader(logger, {
-    packFormat: resolvedOptions.packFormat,
+    packFormat,
     hideFrom: ["jei"],
   });
 
@@ -88,7 +75,7 @@ export default async function generateResources(
   await loader.loadFrom(resolver);
 
   logger.info("loading modules...");
-  await loadModules(loader, modulesDir, resolvedOptions);
+  await loadModules(loader, dirs.modules, { logger, failFast });
 
   logger.info("generating modified resources...");
   await loader.emit(output, { description: `${pack.name} resources` });

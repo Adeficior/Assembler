@@ -1,6 +1,5 @@
 #!/usr/bin/env bun
 
-import { packFormatOf } from "@adeficior/data-modifier";
 import { generateDumpTypes } from "@adeficior/data-modifier/cli";
 import {
   combineResolvers,
@@ -8,47 +7,41 @@ import {
   createResolver,
   type Resolver,
 } from "@adeficior/pack-resolver";
-import { exists } from "fs/promises";
-import { join } from "path";
+import { cp, exists, rm } from "fs/promises";
 import { generateResources, mergeResources } from ".";
 import getArguments from "./args";
 import { uploadToModrinth } from "./publish/modrinth";
 import cloneReferences from "./references";
 import { generateGlobalTypes } from "./types";
 
+async function prepareAssembledPack(from: string, to: string) {
+  if (await exists(to)) await rm(to, { recursive: true });
+  await cp(from, to);
+}
+
 async function run() {
-  const { actions, logger, pack, ...args } = await getArguments();
+  const { actions, ...options } = await getArguments();
+  const { pack, dirs, logger } = options;
+
+  await prepareAssembledPack(dirs.pack, dirs.assembledPack);
 
   if (actions.includes("prepare")) {
-    const typesDir = join(args.cacheDir, "@types");
     await Promise.all([
-      generateGlobalTypes(typesDir, logger),
-      generateDumpTypes("dump", typesDir, logger),
+      generateGlobalTypes(options),
+      generateDumpTypes(dirs.dump, dirs.types, logger),
     ]);
   }
 
-  const packFormat = packFormatOf(pack.versions.minecraft);
-
   if (actions.includes("generate")) {
-    await cloneReferences(args.cacheDir, pack.versions.minecraft, logger);
-    await generateResources(
-      args.modulesDir,
-      args.cacheDir,
-      args.generatedOutput,
-      {
-        logger,
-        packFormat,
-        failFast: args.failFast,
-      },
-      pack,
-    );
+    await cloneReferences(options);
+    await generateResources(options);
   }
 
   if (actions.includes("publish")) {
     if (!pack.version) throw new Error("pack does not have a set version");
     const exportedFile = `${pack.name}-${pack.version}.mrpack`;
 
-    const { projectId, token } = args.modrinth;
+    const { projectId, token } = options.modrinth;
     if (!projectId) throw new Error("modrinth project id not passed");
     if (!token) throw new Error("modrinth token not passed");
 
@@ -59,22 +52,18 @@ async function run() {
   if (actions.includes("merge")) {
     // TODO mergingAcceptor
     const resolvers: Promise<Resolver>[] = [];
-    if (await exists(args.resourcesDir))
-      resolvers.push(
-        createCombinedResolver({ from: args.resourcesDir, logger }),
-      );
-    if (await exists(args.generatedOutput))
-      resolvers.push(createResolver({ from: args.generatedOutput, logger }));
+    if (await exists(dirs.resources))
+      resolvers.push(createCombinedResolver({ from: dirs.resources, logger }));
+    if (await exists(dirs.generated))
+      resolvers.push(createResolver({ from: dirs.generated, logger }));
 
     if (resolvers.length === 0) {
       throw new Error("no resources to merge");
     }
 
-    await mergeResources(
-      combineResolvers(await Promise.all(resolvers)),
-      args.packDir,
-      { cacheDir: args.cacheDir },
-    );
+    await mergeResources(combineResolvers(await Promise.all(resolvers)), {
+      dirs,
+    });
   }
 
   logger.info("Done!");
