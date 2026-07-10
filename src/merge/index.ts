@@ -3,6 +3,7 @@ import {
   notNull,
   simpleAcceptor,
   writeToArchive,
+  writeToFolder,
   type Acceptor,
   type Resolver,
 } from "@adeficior/pack-resolver";
@@ -36,9 +37,13 @@ export default async function mergeResources(
   await write("content", [dirs.assembledPack, "contentpacks", "generated.zip"]);
 
   // TODO write to archive check for actual files
+  const packs = Object.values(acceptors);
   const fallback = simpleAcceptor(async (...args) => {
-    await Promise.all(Object.values(acceptors).map((it) => it.accept(...args)));
+    await Promise.all(packs.map((it) => it.accept(...args)));
   });
+
+  // TODO extract to config
+  acceptors["graph/**"] = writeToFolder("web/src/graph");
 
   const acceptor = distributedAcceptor(acceptors, fallback);
 
