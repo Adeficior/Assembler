@@ -48,7 +48,7 @@ export default async function generateResources({
   failFast,
 }: Options) {
   const resolver = await createCombinedResolver({
-    from: [join(dirs.install, "mods"), join(dirs.references)],
+    from: [join(dirs.install, "mods"), dirs.references],
     logger,
   });
 

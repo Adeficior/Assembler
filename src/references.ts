@@ -1,5 +1,9 @@
 import { parseSemVer } from "@adeficior/data-modifier";
-import { ensureDir, type Logger } from "@adeficior/pack-resolver";
+import {
+  ensureDir,
+  type Logger,
+  type PacksConfig,
+} from "@adeficior/pack-resolver";
 import { $ } from "bun";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
@@ -11,9 +15,13 @@ const neoforgeRepo = "https://github.com/neoforged/NeoForge.git";
 export default async function cloneReferences({ pack, dirs, logger }: Options) {
   await ensureDir(dirs.references);
 
+  const config: PacksConfig = {
+    packs: {},
+  };
+
   logger.info("cloning references...");
 
-  const promises = [
+  const promises: Promise<unknown>[] = [
     cloneReference(
       dirs.references,
       referencesRepo,
@@ -41,7 +49,14 @@ export default async function cloneReferences({ pack, dirs, logger }: Options) {
         logger,
       ),
     );
+
+    config.packs.neoforge = {
+      paths: ["src/generated/resources", "src/main/resources"],
+    };
   }
+
+  const configFile = Bun.file(join(dirs.references, "config.json"));
+  promises.push(configFile.write(JSON.stringify(config, null, 2)));
 
   await Promise.all(promises);
 }
