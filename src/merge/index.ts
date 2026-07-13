@@ -43,7 +43,7 @@ export default async function mergeResources(
   });
 
   // TODO extract to config
-  acceptors["graph/**"] = writeToFolder("web/src/graph");
+  acceptors["graph/**"] = writeToFolder("web/src");
 
   const acceptor = distributedAcceptor(acceptors, fallback);
 
