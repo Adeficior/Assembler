@@ -40,7 +40,7 @@
     "typescript-eslint": "^8.61.0"
   },
   "dependencies": {
-    "@adeficior/data-modifier": "^1.0.0-rc.48",
+    "@adeficior/data-modifier": "^1.0.0-rc.49",
     "arg": "^5.0.2",
     "winston": "^3.19.0"
   }

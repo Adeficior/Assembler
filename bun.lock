@@ -5,7 +5,7 @@
     "": {
       "name": "@voidshake/assembler",
       "dependencies": {
-        "@adeficior/data-modifier": "^1.0.0-rc.48",
+        "@adeficior/data-modifier": "^1.0.0-rc.49",
         "arg": "^5.0.2",
         "winston": "^3.19.0",
       },
@@ -20,7 +20,7 @@
     },
   },
   "packages": {
-    "@adeficior/data-modifier": ["@adeficior/data-modifier@1.0.0-rc.48", "", { "dependencies": { "@adeficior/resource-merger": "^2.0.0-rc.16", "arg": "^5.0.2", "chalk": "^5.6.2", "command-line-usage": "^7.0.4", "json5": "^2.2.3", "lodash-es": "^4.18.1", "minimatch": "^5.1.9", "node-stream-zip": "^1.15.0", "prettier": "^3.8.4", "prismarine-nbt": "^2.8.0", "zod": "^4.4.3" }, "bin": { "datamod": "dist/cli/run.js" } }, "sha512-WgwN1hGdSNaW8IBW8wKgjh+bHvreOP3B+BNqxkREbwFo6+EsglUkT0Oer1T3sCw4FivUSsa0isAoX9Qgw95uaw=="],
+    "@adeficior/data-modifier": ["@adeficior/data-modifier@1.0.0-rc.49", "", { "dependencies": { "@adeficior/resource-merger": "^2.0.0-rc.16", "arg": "^5.0.2", "chalk": "^5.6.2", "command-line-usage": "^7.0.4", "json5": "^2.2.3", "lodash-es": "^4.18.1", "minimatch": "^5.1.9", "node-stream-zip": "^1.15.0", "prettier": "^3.8.4", "prismarine-nbt": "^2.8.0", "zod": "^4.4.3" }, "bin": { "datamod": "dist/cli/run.js" } }, "sha512-e4Yq+jP+Hs79PZqt3839Ns2Lc5jPAoVIOhlmVfjPc3N5Hbs26k48npE0gsZX+59mQGii9tYt8D2Sup0+X44Igg=="],
 
     "@adeficior/pack-resolver": ["@adeficior/pack-resolver@2.0.0-rc.51", "", { "dependencies": { "minimatch": "^10.2.5", "node-stream-zip": "^1.15.0", "zip-a-folder": "^6.1.1" } }, "sha512-BND9qFeAKVvXjgDuvC3ZbpN4eASzZpEUnICYxNXCFj7WetWrk8wYfRKO3WjyI+kmaruLPoFwA5msgY3cB7TnGw=="],
 
